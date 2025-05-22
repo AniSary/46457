@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { AuthContext } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { session } = useContext(AuthContext);
 
   const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signIn({
       email,
       password,
     });
@@ -15,14 +17,19 @@ export default function LoginScreen({ navigation }) {
     if (error) {
       Alert.alert('Błąd logowania', error.message);
     } else {
-      console.log('✅ Zalogowano:', data.session);
-      // НЕ навигируем вручную! AppNavigator сам покажет Home
+      console.log('✅ Zalogowano, czekamy na aktualizację sesji...');
     }
   };
+
+  useEffect(() => {
+    const currentSession = supabase.auth.session();
+    console.log('🔁 Fallback session:', currentSession);
+  }, [session]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Logowanie</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -30,6 +37,7 @@ export default function LoginScreen({ navigation }) {
         value={email}
         onChangeText={setEmail}
       />
+
       <TextInput
         style={styles.input}
         placeholder="Hasło"
@@ -37,7 +45,9 @@ export default function LoginScreen({ navigation }) {
         value={password}
         onChangeText={setPassword}
       />
+
       <Button title="ZALOGUJ SIĘ" onPress={handleLogin} />
+
       <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
         Nie masz konta? Zarejestruj się
       </Text>
@@ -48,6 +58,6 @@ export default function LoginScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { padding: 20, flex: 1, justifyContent: 'center' },
   input: { borderBottomWidth: 1, marginBottom: 15, fontSize: 16 },
-  title: { fontSize: 24, marginBottom: 20 },
+  title: { fontSize: 24, marginBottom: 20, textAlign: 'center' },
   link: { marginTop: 15, color: 'blue', textAlign: 'center' },
 });
