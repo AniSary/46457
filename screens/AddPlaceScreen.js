@@ -1,6 +1,5 @@
-import React, { useState, useContext } from 'react';
-import { View, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import * as Location from 'expo-location';
+import React, { useContext, useState } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { PlacesContext } from '../context/PlacesContext';
 import { useNavigation } from '@react-navigation/native';
 
@@ -11,62 +10,55 @@ export default function AddPlaceScreen() {
   const navigation = useNavigation();
 
   const handleSave = async () => {
-    if (!title.trim()) {
-      Alert.alert('Błąd', 'Wprowadź nazwę miejsca');
+    if (!title.trim() || !description.trim()) {
+      Alert.alert('Uzupełnij wszystkie pola');
       return;
     }
 
+    const mockLocation = {
+      lat: 37.4217937,
+      lng: -122.083922, // <- для примера, ты можешь вставить свои координаты
+    };
+
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Brak dostępu', 'Nie przyznano uprawnień do lokalizacji');
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      const coords = {
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-      };
-
-      addPlace(title, description, coords);
-      navigation.goBack();
+      await addPlace(title, description, mockLocation);
+      navigation.navigate('Home');
     } catch (error) {
-      console.error(error);
-      Alert.alert('Błąd', 'Nie udało się pobrać lokalizacji');
+      Alert.alert('Błąd dodawania miejsca', error.message);
     }
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.label}>Tytuł:</Text>
       <TextInput
         style={styles.input}
-        placeholder="Nazwa miejsca"
         value={title}
         onChangeText={setTitle}
+        placeholder="Nazwa miejsca"
       />
+
+      <Text style={styles.label}>Opis:</Text>
       <TextInput
         style={styles.input}
-        placeholder="Opis (opcjonalnie)"
         value={description}
         onChangeText={setDescription}
+        placeholder="Opis miejsca"
       />
+
       <Button title="Zapisz miejsce" onPress={handleSave} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { padding: 20, flex: 1 },
+  label: { fontWeight: 'bold', marginTop: 10 },
   input: {
-    borderBottomColor: '#ccc',
     borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
     marginBottom: 15,
-    paddingVertical: 8,
+    paddingVertical: 5,
     fontSize: 16,
   },
 });
